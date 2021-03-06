@@ -36,7 +36,64 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
     $host =  $request->get_header('host');
     $segment =  'products';
     $result = [];
-    $data =  json_decode(stripslashes($post_params['data']), true);
+    $data = $post_params;
+    $data['meta_data'] = null;
+
+    if (isset($data['categories'])) {
+      $ids =  explode(',', trim($data['categories']));
+      $temp = [];
+      foreach ($ids as $id) {
+        $temp[] = [
+          'id' => $id,
+        ];
+      }
+      $data['categories'] = $temp;
+    }
+
+    if (isset($data['images'])) {
+      $imgs =  explode('|', trim($data['images']));
+      $temp = [];
+      foreach ($imgs as $img) {
+        $temp[] = [
+          'src' => $img,
+        ];
+      }
+      $data['images'] = $temp;
+    }
+
+    if (isset($data['enable_role_based_price'])) {
+      $data['meta_data'][] = [
+        'key' => '_enable_role_based_price',
+        'value' => $data['enable_role_based_price']
+      ];
+      unset($data['enable_role_based_price']);
+    }
+
+    if (isset($data['role_based_price'])) {
+
+      $roles_price = explode('|', trim($data['role_based_price']));
+      $values = [];
+
+      foreach ($roles_price as $role_price) {
+        $part = explode(':', $role_price);
+        $key = $part[0];
+        $value = $part[1];
+        $values[] = [
+          $key => [
+            'regular_price' => $value
+          ]
+        ];
+      }
+
+      $data['meta_data'][] = [
+        'key' => '_role_based_price',
+        'value' => $values
+      ];
+
+      unset($data['role_based_price']);
+    }
+
+
     $data = json_encode($data);
 
     $url = "https://$host/wp-json/wc/v2/$segment";
