@@ -31,8 +31,8 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
   /**
    * Updates roles
    *
-   * @param [string] $value
-   * @return boolen
+   * @param string $value
+   * @return boolean
    */
   public function update_roles($value)
   {
@@ -53,7 +53,7 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
   /**
    * Gets the roles
    *
-   * @return string serialized
+   * @return array
    */
   public function get_roles()
   {
@@ -61,7 +61,7 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
 
     $query = $wpdb->get_row(
       $wpdb->prepare(
-        " SELECT * FROM {$wpdb->prefix}options WHERE `option_name` like '%_user_roles' "
+        " SELECT * FROM {$wpdb->prefix}options WHERE `option_name` = '{$wpdb->prefix}user_roles' "
       )
     );
 
