@@ -3,7 +3,6 @@
 class WP_REST_Roles_Controller extends WP_REST_Controller
 {
 
-
   /**
    * Register the routes for the objects of the controller.
    */
@@ -20,16 +19,43 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
         'permission_callback' => array($this, 'create_item_permissions_check'),
         'args'                => $this->get_endpoint_args_for_item_schema(true),
       ),
+      array(
+        'methods'             => WP_REST_Server::CREATABLE,
+        'callback'            => array($this, 'create_item'),
+        'permission_callback' => array($this, 'create_item_permissions_check'),
+        'args'                => $this->get_endpoint_args_for_item_schema(true),
+      ),
     ));
   }
 
   /**
-   * Create one item from the collection
+   * Updates roles
    *
-   * @param WP_REST_Request $request Full data about the request.
-   * @return WP_Error|WP_REST_Request
+   * @param [string] $value
+   * @return boolen
    */
-  public function get_items($request)
+  public function update_roles($value)
+  {
+    global $wpdb;
+
+    return $wpdb->update(
+      "{$wpdb->prefix}options",
+      [
+        'option_value' => $value
+      ],
+      [
+        'option_name' =>  "{$wpdb->prefix}user_roles"
+      ]
+    );
+  }
+
+
+  /**
+   * Gets the roles
+   *
+   * @return string serialized
+   */
+  public function get_roles()
   {
     global $wpdb;
 
@@ -39,17 +65,82 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
       )
     );
 
-    $result = [];
-    $elements = unserialize($query->option_value);
+    return unserialize($query->option_value);
+  }
+
+  /**
+   * Create one item from the collection
+   *
+   * @param WP_REST_Request $request Full data about the request.
+   * @return WP_Error|WP_REST_Request
+   */
+  public function create_item($request)
+  {
+    $elements = $this->get_roles();
+    $post_params = $request->get_params();
+    $name = $post_params['name'];
+    $index_name =  strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '_', $name)));
+
+    $status = [
+      'success' => true,
+      'message' => 'Role has been added'
+    ];
+
+    if (!isset($post_params['name']) ||  $post_params['name'] == '' || in_array($index_name, array_keys($elements))) {
+      $status = [
+        'success' => false,
+        'message' => 'name role has been required or already exists'
+      ];
+
+      $data = $this->prepare_response_for_collecction($status, false);
+
+      return new WP_REST_Response($data, 200);
+    }
+
+    $elements[$index_name] = [
+      'name ' => $name,
+      'capabilities' => []
+    ];
+
+    $serialize = serialize($elements);
+    $updated =  $this->update_roles($serialize);
+
+    if (!$updated) {
+      $status = [
+        'success' => false,
+        'message' => 'name role has not been added'
+      ];
+    }
+
+    $data = $this->prepare_response_for_collecction($status, $updated);
+
+    return new WP_REST_Response($data, 200);
+  }
+
+  /**
+   * Get all user Roles as array
+   *
+   * @param WP_REST_Request $request Full data about the request.
+   * @return WP_Error|WP_REST_Request
+   */
+  public function get_items($request)
+  {
+    $items = [];
+    $elements = $this->get_roles();
 
     foreach ($elements as $element) {
-      $result[] = $element;
+      $items[] = $element;
     }
 
     $status = array(
       'success' => true,
       'message' => 'Getting roles'
     );
+
+    $result = [
+      'records' => $items,
+      'total' => count($items)
+    ];
 
     $data = $this->prepare_response_for_collecction($status, $result);
 
@@ -106,10 +197,7 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
 
     return array(
       'success' => $success,
-      'data' => [
-        'records' => $response,
-        'total' => count($response)
-      ],
+      'data' => $response,
       'status' => $status
     );
   }
