@@ -98,11 +98,21 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
 
     $elements[$index_name] = [
       'name' => $name,
-      'capabilities' => []
+      'capabilities' => [
+        "read" => true,
+        "level_0" => true,
+        "level_5" => true,
+        "level_4" => true,
+        "level_3" => true,
+        "level_2" => true,
+        "level_1" => true
+      ]
     ];
 
     $serialize = serialize($elements);
     $updated =  $this->update_roles($serialize);
+
+    // TODO: Activar el rol en Allowed User Roles wp-admin/admin.php?page=woocommerce-role-based-price-settings para que se puedan ver en los precios.
 
     if (!$updated) {
       $status = [
