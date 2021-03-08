@@ -98,7 +98,7 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
     }
 
     $elements[$index_name] = [
-      'name ' => $name,
+      'name' => $name,
       'capabilities' => []
     ];
 

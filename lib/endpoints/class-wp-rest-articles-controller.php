@@ -78,10 +78,9 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
         $part = explode(':', $role_price);
         $key = $part[0];
         $value = $part[1];
-        $values[] = [
-          $key => [
-            'regular_price' => $value
-          ]
+        $values[$key] = [
+          'regular_price' => $value,
+          'selling_price' => $value
         ];
       }
 
@@ -92,7 +91,6 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
 
       unset($data['role_based_price']);
     }
-
 
     $data = json_encode($data);
 
@@ -135,7 +133,7 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
         // success
         $status = [
           'success' => true,
-          'message' => 'product has been added succesfully'
+          'message' => 'Product has been added succesfully'
         ];;
 
         $result = $json_response;
