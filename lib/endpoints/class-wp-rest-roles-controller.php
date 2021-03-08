@@ -64,7 +64,6 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
         " SELECT * FROM {$wpdb->prefix}options WHERE `option_name` = '{$wpdb->prefix}user_roles' "
       )
     );
-
     return unserialize($query->option_value);
   }
 
@@ -128,7 +127,9 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
     $items = [];
     $elements = $this->get_roles();
 
-    foreach ($elements as $element) {
+    foreach ($elements as $index => &$element) {
+
+      $element['sysname']  =  $index;
       $items[] = $element;
     }
 
