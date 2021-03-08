@@ -78,9 +78,10 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
         $part = explode(':', $role_price);
         $key = $part[0];
         $value = $part[1];
+        $prices =  explode('_', $value);
         $values[$key] = [
-          'regular_price' => $value,
-          'selling_price' => $value
+          'regular_price' =>  isset($prices[0]) ? $prices[0] : '',
+          'selling_price' => isset($prices[1]) ? $prices[1] : '',
         ];
       }
 

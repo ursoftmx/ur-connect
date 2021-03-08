@@ -38,15 +38,7 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
   {
     global $wpdb;
 
-    return $wpdb->update(
-      "{$wpdb->prefix}options",
-      [
-        'option_value' => $value
-      ],
-      [
-        'option_name' =>  "{$wpdb->prefix}user_roles"
-      ]
-    );
+    return update_option("{$wpdb->prefix}user_roles", $value);
   }
 
 
@@ -59,12 +51,7 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
   {
     global $wpdb;
 
-    $query = $wpdb->get_row(
-      $wpdb->prepare(
-        " SELECT * FROM {$wpdb->prefix}options WHERE `option_name` = '{$wpdb->prefix}user_roles' "
-      )
-    );
-    return unserialize($query->option_value);
+    return get_option("{$wpdb->prefix}user_roles");
   }
 
   /**
@@ -75,6 +62,7 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
    */
   public function create_item($request)
   {
+    $rcb_general = get_option('wc_rbp_general');
     $elements = $this->get_roles();
     $post_params = $request->get_params();
     $name = $post_params['name'];
@@ -109,10 +97,11 @@ class WP_REST_Roles_Controller extends WP_REST_Controller
       ]
     ];
 
-    $serialize = serialize($elements);
-    $updated =  $this->update_roles($serialize);
+    $rcb_general['wc_rbp_allowed_roles'][] = $index_name;
 
-    // TODO: Activar el rol en Allowed User Roles wp-admin/admin.php?page=woocommerce-role-based-price-settings para que se puedan ver en los precios.
+    update_option('wc_rbp_general', $rcb_general);
+
+    $updated =  $this->update_roles($elements);
 
     if (!$updated) {
       $status = [
