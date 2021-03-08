@@ -1,7 +1,8 @@
 <?php
 
-class WP_REST_Categories_Controller extends WP_REST_Controller
+class WP_REST_Roles_Controller extends WP_REST_Controller
 {
+
 
   /**
    * Register the routes for the objects of the controller.
@@ -10,12 +11,12 @@ class WP_REST_Categories_Controller extends WP_REST_Controller
   {
 
     $namespace = 'api/v1';
-    $base = 'categories';
+    $base = 'roles';
 
     register_rest_route($namespace, '/' . $base, array(
       array(
-        'methods'             => WP_REST_Server::CREATABLE,
-        'callback'            => array($this, 'create_item'),
+        'methods'             => WP_REST_Server::READABLE,
+        'callback'            => array($this, 'get_items'),
         'permission_callback' => array($this, 'create_item_permissions_check'),
         'args'                => $this->get_endpoint_args_for_item_schema(true),
       ),
@@ -28,68 +29,27 @@ class WP_REST_Categories_Controller extends WP_REST_Controller
    * @param WP_REST_Request $request Full data about the request.
    * @return WP_Error|WP_REST_Request
    */
-  public function create_item($request)
+  public function get_items($request)
   {
+    global $wpdb;
 
-    $post_params = $request->get_params();
-    $authorization = $request->get_header('authorization');
-    $host =  $request->get_header('host');
-    $segment = 'products/categories';
-    $result = [];
-    $data = $post_params;
-
-    if (isset($data['img_src'])) {
-      $data['image']['src'] =  $data['img_src'];
-      unset($data['img_src']);
-    }
-
-    $data =  json_encode($data);
-
-    $url = "https://$host/wp-json/wc/v2/$segment";
-    $headers = array(
-      'Content-Type' => 'application/json; charset=utf-8',
-      'Authorization' => $authorization,
+    $query = $wpdb->get_row(
+      $wpdb->prepare(
+        " SELECT * FROM {$wpdb->prefix}options WHERE `option_name` like '%_user_roles' "
+      )
     );
 
-    $response = wp_remote_post($url, array(
-      'method'  => WP_REST_Server::CREATABLE,
-      'headers' => $headers,
-      'body'    =>  $data,
-      'data_format' => 'body',
-    ));
+    $result = [];
+    $elements = unserialize($query->option_value);
+
+    foreach ($elements as $element) {
+      $result[] = $element;
+    }
 
     $status = array(
       'success' => true,
-      'message' => 'message',
-      'code' => 'code'
+      'message' => 'Getting roles'
     );
-
-    if (defined('WP_DEBUG') && true === WP_DEBUG) {
-      $result = true;
-    } else {
-
-      $json_response = json_decode(wp_remote_retrieve_body($response));
-      if ($json_response->code) {
-        // errr
-        $status = [
-          'post_params' => $post_params,
-          'debug' => $data,
-          'success' => false,
-          'message' => 'Has been ocurred an error'
-        ];
-
-        $result = $json_response;
-      } else {
-
-        // success
-        $status = [
-          'success' => true,
-          'message' => 'category has been added succesfully'
-        ];;
-
-        $result = $json_response;
-      }
-    }
 
     $data = $this->prepare_response_for_collecction($status, $result);
 
@@ -146,13 +106,16 @@ class WP_REST_Categories_Controller extends WP_REST_Controller
 
     return array(
       'success' => $success,
-      'data' => $response,
+      'data' => [
+        'records' => $response,
+        'total' => count($response)
+      ],
       'status' => $status
     );
   }
 }
 
 add_action('rest_api_init', function () {
-  $latest_posts_controller = new WP_REST_Categories_Controller();
+  $latest_posts_controller = new WP_REST_Roles_Controller();
   $latest_posts_controller->register_routes();
 });

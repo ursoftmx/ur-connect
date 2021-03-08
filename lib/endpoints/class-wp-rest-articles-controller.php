@@ -103,7 +103,7 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
     );
 
     $response = wp_remote_post($url, array(
-      'method'  => 'POST',
+      'method'  => WP_REST_Server::CREATABLE,
       'headers' => $headers,
       'body'    => $data,
       'data_format' => 'body',
@@ -135,7 +135,7 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
         // success
         $status = [
           'success' => true,
-          'message' => 'category has been added succesfully'
+          'message' => 'product has been added succesfully'
         ];;
 
         $result = $json_response;
