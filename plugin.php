@@ -32,3 +32,10 @@ if ( ! class_exists( 'WP_REST_Articles_Controller' ) ) {
 if ( ! class_exists( 'WP_REST_Roles_Controller' ) ) {
 	require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-roles-controller.php';
 }
+
+/**
+ * WP_REST_Roles_Controller class.
+ */
+if ( ! class_exists( 'WP_REST_Orders_Controller' ) ) {
+	require_once dirname( __FILE__ ) . '/lib/endpoints/class-wp-rest-orders-controller.php';
+}
