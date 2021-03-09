@@ -64,31 +64,25 @@ class WP_REST_Categories_Controller extends WP_REST_Controller
       'code' => 'code'
     );
 
-    if (defined('WP_DEBUG') && true === WP_DEBUG) {
-      $result = true;
+    if (is_wp_error($response)) {
+      // errr
+      $status = [
+        'post_params' => $post_params,
+        'debug' => $data,
+        'success' => false,
+        'message' => $response->get_error_message()
+      ];
+
+      $result = null;
     } else {
 
-      $json_response = json_decode(wp_remote_retrieve_body($response));
-      if ($json_response->code) {
-        // errr
-        $status = [
-          'post_params' => $post_params,
-          'debug' => $data,
-          'success' => false,
-          'message' => 'Has been ocurred an error'
-        ];
+      // success
+      $status = [
+        'success' => true,
+        'message' => 'category has been added succesfully'
+      ];;
 
-        $result = $json_response;
-      } else {
-
-        // success
-        $status = [
-          'success' => true,
-          'message' => 'category has been added succesfully'
-        ];;
-
-        $result = $json_response;
-      }
+      $result = json_decode(wp_remote_retrieve_body($response));
     }
 
     $data = $this->prepare_response_for_collecction($status, $result);
