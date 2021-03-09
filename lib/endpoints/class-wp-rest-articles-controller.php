@@ -20,6 +20,15 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
         'args'                => $this->get_endpoint_args_for_item_schema(true),
       ),
     ));
+
+    register_rest_route($namespace, '/' . $base . '/(?P<id>\d+)', array(
+      array(
+        'methods'             => WP_REST_Server::EDITABLE,
+        'callback'            => array($this, 'update_item'),
+        'permission_callback' => array($this, 'create_item_permissions_check'),
+        'args'                => $this->get_endpoint_args_for_item_schema(true),
+      ),
+    ));
   }
 
   /**
@@ -30,13 +39,11 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
    */
   public function create_item($request)
   {
-
-    $post_params = $request->get_params();
+    $data = $request->get_params();
     $authorization = $request->get_header('authorization');
     $host =  $request->get_header('host');
     $segment =  'products';
     $result = [];
-    $data = $post_params;
     $data['meta_data'] = null;
 
     if (isset($data['categories'])) {
@@ -139,6 +146,21 @@ class WP_REST_Articles_Controller extends WP_REST_Controller
     $data = $this->prepare_response_for_collecction($status, $result);
 
     return new WP_REST_Response($data, 200);
+  }
+
+  /**
+   * Update one item from the collection
+   *
+   * @param WP_REST_Request $request Full data about the request.
+   * @return WP_Error|WP_REST_Request
+   */
+  public function update_item($request)
+  {
+    $id = $request->get_param('id');
+    $body =  array_diff_key($request->get_params(), array_flip(["id"]));
+    // TODO:  hacer el llamado del endpoint para actualizar
+    var_dump($id, $body);
+    exit;
   }
 
   /**
