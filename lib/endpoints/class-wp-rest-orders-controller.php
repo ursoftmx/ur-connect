@@ -28,7 +28,6 @@ class WP_REST_Orders_Controller extends WP_REST_Controller
         'permission_callback' => array($this, 'create_item_permissions_check'),
         'args'                => $this->get_endpoint_args_for_item_schema(true),
       ),
-      // TODO: Update order status
       array(
         'methods'             => WP_REST_Server::EDITABLE,
         'callback'            => array($this, 'update_item'),
@@ -46,7 +45,6 @@ class WP_REST_Orders_Controller extends WP_REST_Controller
    */
   public function list_items($request)
   {
-
     $status = $request->get_param('status');
     $authorization = $request->get_header('authorization');
     $host =  $request->get_header('host');
@@ -187,6 +185,20 @@ class WP_REST_Orders_Controller extends WP_REST_Controller
     return new WP_REST_Response($data, 200);
   }
 
+  /**
+   * Update one item from the collection
+   *
+   * @param WP_REST_Request $request Full data about the request.
+   * @return WP_Error|WP_REST_Request
+   */
+  public function update_item($request)
+  {
+    $id = $request->get_param('id');
+    $body =  array_diff_key($request->get_params(), array_flip(["id"]));
+    // TODO:  hacer el llamado del endpoint para actualizar
+    var_dump($id, $body);
+    exit;
+  }
   /**
    * Check if a given request has access to create items
    *
