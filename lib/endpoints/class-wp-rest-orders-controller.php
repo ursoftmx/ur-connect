@@ -193,11 +193,72 @@ class WP_REST_Orders_Controller extends WP_REST_Controller
    */
   public function update_item($request)
   {
+    $authorization = $request->get_header('authorization');
+    $host =  $request->get_header('host');
     $id = $request->get_param('id');
-    $body =  array_diff_key($request->get_params(), array_flip(["id"]));
-    // TODO:  hacer el llamado del endpoint para actualizar
-    var_dump($id, $body);
-    exit;
+
+    $segment = "orders/$id";
+    $result = [];
+
+    $data = json_encode([
+      'status' => $request->get_param('status')
+    ]);
+    $url = "https://$host/wp-json/wc/v2/$segment";
+
+    $headers = array(
+      'Content-Type' => 'application/json; charset=utf-8',
+      'Authorization' => $authorization,
+    );
+
+    $response = wp_remote_request($url, array(
+      'method'  => 'PUT',
+      'headers' => $headers,
+      'body'    => $data,
+      'data_format' => 'body',
+    ));
+
+    $status = array(
+      'success' => true,
+      'message' => 'message',
+      'code' => 'code'
+    );
+
+    if (is_wp_error($response)) {
+      // errr
+      $status = [
+        'debug' => $data,
+        'success' => false,
+        'message' => $response->get_error_message()
+      ];
+
+      $result = null;
+    } else {
+
+      // success
+      $status = [
+        'success' => true,
+        'message' => 'Updating order status'
+      ];
+
+      $res = json_decode(wp_remote_retrieve_body($response));
+
+      if (isset($res->code)) {
+
+        $status = [
+          'success' => false,
+          'message' => $res->data->params->status
+        ];
+
+        $result = null;
+      } else {
+
+        $result = $res;
+      }
+    }
+
+    $data = $this->prepare_response_for_collecction($status, $result);
+
+    return new WP_REST_Response($data, 200);
   }
   /**
    * Check if a given request has access to create items
