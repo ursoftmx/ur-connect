@@ -20,6 +20,15 @@ class WP_REST_Categories_Controller extends WP_REST_Controller
         'args'                => $this->get_endpoint_args_for_item_schema(true),
       ),
     ));
+
+    register_rest_route($namespace, '/' . $base . '/(?P<id>\d+)', array(
+      array(
+        'methods'             => WP_REST_Server::EDITABLE,
+        'callback'            => array($this, 'update_item'),
+        'permission_callback' => array($this, 'create_item_permissions_check'),
+        'args'                => $this->get_endpoint_args_for_item_schema(true),
+      ),
+    ));
   }
 
   /**
@@ -80,6 +89,78 @@ class WP_REST_Categories_Controller extends WP_REST_Controller
       $status = [
         'success' => true,
         'message' => 'category has been added succesfully'
+      ];;
+
+      $result = json_decode(wp_remote_retrieve_body($response));
+    }
+
+    $data = $this->prepare_response_for_collecction($status, $result);
+
+    return new WP_REST_Response($data, 200);
+  }
+
+  /**
+   * Updae one item from the collection
+   *
+   * @param WP_REST_Request $request Full data about the request.
+   * @return WP_Error|WP_REST_Request
+   */
+  public function update_item($request)
+  {
+
+    $authorization = $request->get_header('authorization');
+    $host =  $request->get_header('host');
+    $id = $request->get_param('id');
+    $data =  array_diff_key($request->get_params(), array_flip(["id"]));
+    $segment =  "products/categories/$id";
+    $result = [];
+
+    if (isset($data['name'])) {
+      $data['slug'] = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $data['name'])));
+    }
+
+    if (isset($data['img_src'])) {
+      $data['image']['src'] =  $data['img_src'];
+      unset($data['img_src']);
+    }
+
+    $data =  json_encode($data);
+
+    $url = "https://$host/wp-json/wc/v2/$segment";
+    $headers = array(
+      'Content-Type' => 'application/json; charset=utf-8',
+      'Authorization' => $authorization,
+    );
+
+    $response = wp_remote_post($url, array(
+      'method'  => 'PUT',
+      'headers' => $headers,
+      'body'    =>  $data,
+      'data_format' => 'body',
+    ));
+
+    $status = array(
+      'success' => true,
+      'message' => 'message',
+      'code' => 'code'
+    );
+
+    if (is_wp_error($response)) {
+      // errr
+      $status = [
+        'post_params' => $post_params,
+        'debug' => $data,
+        'success' => false,
+        'message' => $response->get_error_message()
+      ];
+
+      $result = null;
+    } else {
+
+      // success
+      $status = [
+        'success' => true,
+        'message' => 'category has been updated succesfully'
       ];;
 
       $result = json_decode(wp_remote_retrieve_body($response));
